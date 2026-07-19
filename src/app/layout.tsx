@@ -19,14 +19,14 @@ const themeScript = `
 `;
 
 const kanit = Kanit({
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["thai", "latin"],
   display: "swap",
   variable: "--font-kanit",
+  preload: false,
 });
-
 export const metadata: Metadata = {
-  title: "ใช้เอง - Personal App",
+  title: "ใช้เอง",
   description: "แอปพลิเคชันจัดการชีวิตส่วนตัวของคุณแบบครบวงจร",
 };
 

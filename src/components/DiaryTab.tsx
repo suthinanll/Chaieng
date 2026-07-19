@@ -209,11 +209,11 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
       {/* ── Tab Header ── */}
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/60 pb-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-indigo-500/10 p-2 text-indigo-600 dark:text-indigo-400">
+          <div className="rounded-xl bg-neutral-900 dark:bg-neutral-800 p-2 text-yellow-400">
             <BookOpen className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">บันทึกส่วนตัว</h2>
+            <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">บันทึกส่วนตัว</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {entries.length} บันทึก · ความทรงจำและเรื่องราว
             </p>
@@ -222,7 +222,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
         
         <button
           onClick={openNewForm}
-          className="inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-indigo-600/10 transition-all hover:bg-indigo-500 active:scale-95 cursor-pointer"
+          className="inline-flex items-center gap-1 rounded-xl bg-slate-900 dark:bg-white px-3.5 py-2 text-xs font-bold text-white dark:text-slate-900 shadow-md transition-all hover:bg-slate-700 dark:hover:bg-slate-200 active:scale-95 cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           บันทึกใหม่
@@ -237,7 +237,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
           placeholder="ค้นหาบันทึก..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder-slate-600"
+          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-yellow-400 placeholder:text-slate-400 dark:placeholder-slate-600"
         />
       </div>
 
@@ -271,7 +271,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
                         {renderMoodIcon(entry.mood, "h-4 w-4")}
                       </div>
                     )}
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                    <h3 className="text-sm font-medium text-slate-900 dark:text-white truncate">
                       {entry.title || 'ไม่มีชื่อหัวข้อ'}
                     </h3>
                   </div>
@@ -300,7 +300,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
       {/* ── View Modal (Apple Style Slide-up Sheet centered on desktop) ── */}
       {viewingEntry && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setViewingEntry(null)} />
+          <div className="absolute inset-0 bg-black/40 backdrop" onClick={() => setViewingEntry(null)} />
           <div className="relative w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-6 pb-10 max-h-[85vh] md:max-h-[90vh] overflow-y-auto shadow-2xl transition-all">
             {/* Top Indicator Accent (hidden on desktop) */}
             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full bg-slate-200 dark:bg-slate-800 md:hidden" />
@@ -314,7 +314,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
                     <span>{formatDate(viewingEntry.created_at)} ที่ {formatTime(viewingEntry.created_at)}</span>
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-snug">
+                <h3 className="text-lg font-medium text-slate-900 dark:text-white leading-snug">
                   {viewingEntry.title}
                 </h3>
               </div>
@@ -322,13 +322,13 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => openEditForm(viewingEntry)}
-                  className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 transition-colors cursor-pointer"
+                  className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors cursor-pointer"
                 >
                   <Edit3 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(viewingEntry.id)}
-                  className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-rose-500/5 hover:text-rose-500 transition-colors cursor-pointer"
+                  className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -351,7 +351,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
       {/* ── Write / Edit Modal (iPhone Note Creator Style centered on desktop) ── */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeForm} />
+          <div className="absolute inset-0 bg-black/40 backdrop" onClick={closeForm} />
           <form
             onSubmit={handleSave}
             className="relative w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-6 pb-10 max-h-[90vh] overflow-y-auto shadow-2xl"
@@ -359,7 +359,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full bg-slate-200 dark:bg-slate-800 md:hidden" />
 
             <div className="flex items-center justify-between mt-2 mb-5">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              <h3 className="text-sm font-medium text-slate-900 dark:text-white">
                 {editingEntry ? 'แก้ไขบันทึก' : 'โน้ตใหม่'}
               </h3>
               <button 
@@ -388,7 +388,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
                       title={m.label}
                       className={`flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl transition-all border cursor-pointer ${
                         isSelected
-                          ? 'bg-white dark:bg-slate-900 border-indigo-500/30 ring-2 ring-indigo-500/20 scale-105'
+                          ? 'bg-white dark:bg-slate-900 border-yellow-400/40 ring-2 ring-yellow-400/20 scale-105'
                           : 'bg-transparent border-transparent hover:bg-white/60 dark:hover:bg-slate-900/40 text-slate-400 dark:text-slate-600'
                       }`}
                     >
@@ -407,7 +407,7 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
                 placeholder="ชื่อเรื่อง"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="w-full bg-transparent px-1 py-1 text-base font-bold text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                className="w-full bg-transparent px-1 py-1 text-base font-medium text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-300 dark:placeholder:text-slate-700"
               />
 
               <textarea
@@ -431,14 +431,14 @@ export default function DiaryTab({ userId }: DiaryTabProps) {
               <button
                 type="button"
                 onClick={closeForm}
-                className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 py-2.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
               >
                 ยกเลิก
               </button>
               <button
                 type="submit"
                 disabled={saving || (!title.trim() && !content.trim())}
-                className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/10 transition-all hover:bg-indigo-500 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 rounded-xl bg-slate-900 dark:bg-white py-2.5 text-xs font-medium text-white dark:text-slate-900 shadow-md transition-all hover:bg-slate-700 dark:hover:bg-slate-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {saving ? 'กำลังเซฟ...' : 'เสร็จสิ้น'}
               </button>

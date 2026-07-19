@@ -9,17 +9,14 @@ import {
   ChevronRight, 
   Clock, 
   RefreshCw, 
-  CheckCircle2, 
   Trash2, 
   X,
-  Zap,
   Calendar
 } from 'lucide-react'
 import {
   showSuccess,
   showError,
-  showDeleteConfirm,
-  getSwalTheme
+  showDeleteConfirm
 } from '../lib/swalConfig'
 
 interface CalendarEvent {
@@ -28,7 +25,6 @@ interface CalendarEvent {
   title: string
   start_time: string
   end_time: string
-  google_event_id: string | null
   created_at: string
 }
 
@@ -40,23 +36,27 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [issubmitting, setIsSubmitting] = useState(false)
 
   // Form states
   const [title, setTitle] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
 
-  // Sync simulation state
-  const [syncing, setSyncing] = useState(false)
-  const [syncLogs, setSyncLogs] = useState<string[]>([])
-  const [syncSuccess, setSyncSuccess] = useState(false)
-
   // Selected date for filter (defaults to today)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [clickedDate, setClickedDate] = useState<Date>(new Date())
 
   useEffect(() => {
     fetchEvents()
   }, [userId])
+
+  // ล้างค่าเวลาสิ้นสุดหากเวลาเริ่มต้นถูกตั้งค่าให้มากกว่าเวลาสิ้นสุดเดิม
+  useEffect(() => {
+    if (startTime && endTime && new Date(endTime) < new Date(startTime)) {
+      setEndTime('')
+    }
+  }, [startTime])
 
   const fetchEvents = async () => {
     setLoading(true)
@@ -83,32 +83,18 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
     return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
   }
 
-  // Handle Event submission with Google Calendar sync simulation
+  // Handle Event submission
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !startTime || !endTime) return
 
-    setSyncing(true)
-    setSyncSuccess(false)
-    setSyncLogs([])
-
-    const logs = [
-      'กำลังเรียกใช้งาน Google OAuth Token...',
-      'เชื่อมต่อ Google API Endpoints...',
-      'กำลังสร้าง Event ใหม่ใน Google Calendar ปฏิทินหลัก...',
-      'อัปเดตข้อมูลทิศทางเดียว (One-way Sync) เรียบร้อยแล้ว!'
-    ]
-
-    for (let i = 0; i < logs.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 400))
-      setSyncLogs(prev => [...prev, logs[i]])
+    // ตรวจสอบความถูกต้องของเวลาอีกครั้งก่อนส่งข้อมูล
+    if (new Date(endTime) < new Date(startTime)) {
+      showError('เกิดข้อผิดพลาด', 'เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น')
+      return
     }
 
-    setSyncSuccess(true)
-    await new Promise(resolve => setTimeout(resolve, 600))
-
-    const mockGcalId = `mock-gcal-${Math.random().toString(36).substring(2, 11)}`
-
+    setIsSubmitting(true)
     try {
       const { error } = await supabase
         .from('calendar_events')
@@ -116,8 +102,7 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
           user_id: userId,
           title: title.trim(),
           start_time: new Date(startTime).toISOString(),
-          end_time: new Date(endTime).toISOString(),
-          google_event_id: mockGcalId
+          end_time: new Date(endTime).toISOString()
         })
 
       if (error) throw error
@@ -128,20 +113,19 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
       setIsModalOpen(false)
       fetchEvents()
 
-      showSuccess('บันทึกสำเร็จ', 'เพิ่มกิจกรรมและซิงก์ข้อมูลเรียบร้อย')
+      showSuccess('บันทึกสำเร็จ', 'เพิ่มกิจกรรมลงในกำหนดการเรียบร้อย')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error'
       showError('เกิดข้อผิดพลาด', 'บันทึกปฏิทินล้มเหลว: ' + message)
     } finally {
-      setSyncing(false)
-      setSyncSuccess(false)
+      setIsSubmitting(false)
     }
   }
 
   const handleDeleteEvent = async (id: string) => {
     const result = await showDeleteConfirm(
       'ลบนัดหมาย?',
-      'คุณต้องการลบปฏิทินนัดหมายนี้ใช่หรือไม่ (ข้อมูลจำลองใน Google Calendar จะยังคงอยู่)'
+      'คุณต้องการลบปฏิทินนัดหมายนี้ใช่หรือไม่'
     )
 
     if (!result.isConfirmed) return
@@ -188,7 +172,6 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
     calendarCells.push(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), d))
   }
 
-  const [clickedDate, setClickedDate] = useState<Date>(new Date())
   const selectedDateEvents = events.filter(e => {
     const eventDate = new Date(e.start_time)
     return (
@@ -214,17 +197,17 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
       {/* ── Tab Header ── */}
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/60 pb-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-indigo-50 dark:bg-indigo-500/10 p-2 text-indigo-600 dark:text-indigo-400">
+          <div className="rounded-xl bg-neutral-900 dark:bg-neutral-800 p-2 text-yellow-400">
             <CalendarDays className="h-6 w-6" />
           </div>
           <div>
             <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">กำหนดการ</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">ตารางการนัดหมายและการซิงก์ปฏิทิน</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">ตารางการนัดหมายและกิจกรรมส่วนตัว</p>
           </div>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95 cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 dark:bg-white px-3.5 py-2.5 text-xs font-medium text-white dark:text-slate-900 shadow-sm transition-all hover:bg-slate-700 dark:hover:bg-slate-200 active:scale-95 cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>เพิ่มนัดหมาย</span>
@@ -237,7 +220,7 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
         <div className="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/30 p-4 shadow-sm">
           {/* Month Navigation */}
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+            <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">
               {selectedDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
             </h3>
             <div className="flex gap-2">
@@ -257,7 +240,7 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
           </div>
 
           {/* Days of week */}
-          <div className="grid grid-cols-7 text-center text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
+          <div className="grid grid-cols-7 text-center text-xs font-medium text-slate-400 dark:text-slate-500 mb-2">
             <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
           </div>
 
@@ -279,13 +262,13 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
                   onClick={() => setClickedDate(day)}
                   className={`relative flex flex-col items-center justify-center h-9 w-9 lg:h-11 lg:w-11 mx-auto rounded-lg text-xs lg:text-sm transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20'
+                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium shadow-md'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span>{day.getDate()}</span>
                   {hasEvents && (
-                    <span className={`absolute bottom-1 h-1 w-1 rounded-full ${isSelected ? 'bg-white' : 'bg-indigo-500 dark:bg-indigo-400'}`} />
+                    <span className={`absolute bottom-1 h-1 w-1 rounded-full ${isSelected ? 'bg-yellow-400' : 'bg-yellow-500 dark:bg-yellow-400'}`} />
                   )}
                 </button>
               )
@@ -295,14 +278,14 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
 
         {/* Right Column: Selected Date Agenda Events */}
         <div className="lg:col-span-7 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
             <span>นัดหมายประจำวันที่ {clickedDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'long' })}</span>
           </h3>
 
           {loading ? (
             <div className="flex justify-center py-6">
-              <RefreshCw className="h-5 w-5 animate-spin text-indigo-600 dark:text-indigo-400" />
+              <RefreshCw className="h-5 w-5 animate-spin text-slate-400 dark:text-slate-500" />
             </div>
           ) : selectedDateEvents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/10">
@@ -317,27 +300,21 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
                   className="flex items-center justify-between rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-4 shadow-sm hover:border-slate-300 dark:hover:border-slate-700/60 transition-colors"
                 >
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="mt-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 p-1.5 text-indigo-600 dark:text-indigo-400 shrink-0">
+                    <div className="mt-0.5 rounded-lg bg-yellow-400/10 dark:bg-yellow-400/15 p-1.5 text-yellow-600 dark:text-yellow-400 shrink-0">
                       <Calendar className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">{evt.title}</h4>
+                      <h4 className="text-sm font-medium text-slate-900 dark:text-white truncate">{evt.title}</h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
                         <Clock className="h-3 w-3 text-slate-400 dark:text-slate-500" />
                         <span>{formatTime(evt.start_time)} - {formatTime(evt.end_time)}</span>
                       </p>
-                      {evt.google_event_id && (
-                        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
-                          <RefreshCw className="h-2 w-2" />
-                          <span>Synced: {evt.google_event_id.replace('mock-gcal-', '')}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
 
                   <button
                     onClick={() => handleDeleteEvent(evt.id)}
-                    className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors p-1.5 rounded-lg cursor-pointer"
+                    className="text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-1.5 rounded-lg cursor-pointer"
                     title="ลบนัดหมาย"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -354,37 +331,9 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-slate-950/80 p-4">
           <div className="relative w-full max-w-sm lg:max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl">
             
-            {/* Syncing Overlay Loading Screen */}
-            {syncing && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-3xl bg-white/95 dark:bg-slate-900/95 p-6 text-center">
-                {!syncSuccess ? (
-                  <>
-                    <RefreshCw className="h-8 w-8 animate-spin text-indigo-600 dark:text-indigo-400 mb-4" />
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white">กำลังดำเนินการ</h3>
-                    <div className="mt-4 space-y-1 text-left w-full max-w-xs font-mono text-[10px] text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl max-h-[140px] overflow-y-auto">
-                      {syncLogs.map((log, index) => (
-                        <div key={index} className="flex items-center gap-1.5">
-                          <Zap className="h-2.5 w-2.5 text-indigo-500 dark:text-indigo-400" />
-                          <span>{log}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <div className="h-12 w-12 flex items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-3 border border-emerald-200 dark:border-emerald-500/20">
-                      <CheckCircle2 className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">บันทึกสำเร็จ</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">กำลังบันทึกลงระบบฐานข้อมูล...</p>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Modal Form Header */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">สร้างนัดหมายใหม่</h3>
+              <h3 className="font-medium text-slate-900 dark:text-white text-base">สร้างนัดหมายใหม่</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1 rounded-lg transition-colors cursor-pointer"
@@ -400,10 +349,11 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
                 <input
                   type="text"
                   required
+                  disabled={issubmitting}
                   placeholder="เช่น นัดประชุม, ไปหาหมอ..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-600 font-medium"
+                  className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:bg-white dark:focus:bg-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-600 font-medium disabled:opacity-60"
                 />
               </div>
 
@@ -412,9 +362,10 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
                 <input
                   type="datetime-local"
                   required
+                  disabled={issubmitting}
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900"
+                  className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:bg-white dark:focus:bg-slate-900 disabled:opacity-60"
                 />
               </div>
 
@@ -423,23 +374,31 @@ export default function ScheduleTab({ userId }: ScheduleTabProps) {
                 <input
                   type="datetime-local"
                   required
+                  disabled={issubmitting || !startTime}
+                  min={startTime} // ใช้ html attribute บล็อกไม่ให้กดเลือกเวลาที่ก่อนเวลาเริ่มต้น
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900"
+                  className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:bg-white dark:focus:bg-slate-900 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div className="flex gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700 active:scale-95 transition-all cursor-pointer"
+                  disabled={issubmitting}
+                  className="flex-1 rounded-xl bg-slate-900 dark:bg-white py-2.5 text-xs font-medium text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-200 active:scale-95 transition-all cursor-pointer flex items-center justify-center disabled:opacity-60"
                 >
-                  สร้างนัดหมาย
+                  {issubmitting ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'สร้างนัดหมาย'
+                  )}
                 </button>
                 <button
                   type="button"
+                  disabled={issubmitting}
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-60"
                 >
                   ยกเลิก
                 </button>

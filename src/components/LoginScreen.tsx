@@ -1,11 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Image from 'next/image'  
 import { supabase } from '../lib/supabase'
 
 export default function LoginScreen() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  useEffect(() => {
+    setIsDarkMode(document.documentElement.classList.contains('dark'))
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
   const handleGoogleLogin = async () => {
     setLoading(true)
@@ -33,9 +44,7 @@ export default function LoginScreen() {
 
       <div className="w-full max-w-sm lg:max-w-md rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/5 p-8 lg:p-12 text-center backdrop-blur-xl shadow-xl dark:shadow-2xl transition-all duration-300 hover:border-slate-300 dark:hover:border-white/20">
         <div className="mb-8">
-          <h1 className="mt-6 bg-linear-to-r from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-4xl lg:text-5xl font-bold tracking-tight text-transparent">
-            ใช้เอง
-          </h1>
+          <Image src={isDarkMode ? "/darklogo.png" : "/lightlogo.png"} alt="Logo" className="w-60 mx-auto" width={100} height={100} />
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             ระบบแอปพลิเคชันที่ทำเองเพื่อ "ใช้เอง"
           </p>

@@ -232,11 +232,11 @@ export default function TasksTab({ userId }: TasksTabProps) {
       {/* ── Tab Header ── */}
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/60 pb-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-indigo-500/10 p-2 text-indigo-600 dark:text-indigo-400">
+          <div className="rounded-xl bg-neutral-900 dark:bg-neutral-800 p-2 text-yellow-400">
             <ListTodo className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">รายการงาน</h2>
+            <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">รายการงาน</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               เสร็จสิ้นแล้ว {completedCount} จากทั้งหมด {totalCount} งาน
             </p>
@@ -247,7 +247,7 @@ export default function TasksTab({ userId }: TasksTabProps) {
           onClick={() => setHideCompleted(!hideCompleted)}
           className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold border transition-all active:scale-95 cursor-pointer ${
             hideCompleted
-              ? 'bg-indigo-600/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400'
+              ? 'bg-yellow-400/10 dark:bg-yellow-400/15 border-yellow-400/20 text-yellow-600 dark:text-yellow-400'
               : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'
           }`}
         >
@@ -258,16 +258,16 @@ export default function TasksTab({ userId }: TasksTabProps) {
 
       {/* ── Progress Widget ── */}
       {totalCount > 0 && (
-        <div className="space-y-2 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-900 rounded-2xl p-4 shadow-sm">
+        <div className="space-y-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm dark:shadow-inner">
           <div className="flex justify-between items-center text-[11px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500">
             <span className="flex items-center gap-1">
-              <Target className="h-3.5 w-3.5 text-indigo-500" /> ความสำเร็จโดยรวม
+              <Target className="h-3.5 w-3.5 text-yellow-500 dark:text-yellow-400" /> ความสำเร็จโดยรวม
             </span>
             <span className="text-slate-700 dark:text-slate-300 font-extrabold">{progress}%</span>
           </div>
           <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500 ease-out"
+              className="h-full rounded-full bg-yellow-400 transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -312,7 +312,7 @@ export default function TasksTab({ userId }: TasksTabProps) {
                   todo.id === draggingId
                     ? 'bg-slate-50 dark:bg-slate-800/60 opacity-60'
                     : todo.id === dragOverId
-                    ? 'border-t-2 border-indigo-500 bg-indigo-500/5'
+                    ? 'border-t-2 border-yellow-400 bg-yellow-400/5'
                     : todo.is_completed
                     ? 'bg-slate-50/40 dark:bg-slate-950/[0.15] opacity-50'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'
@@ -331,12 +331,12 @@ export default function TasksTab({ userId }: TasksTabProps) {
                     onClick={() => handleToggleComplete(todo.id, todo.is_completed)}
                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all cursor-pointer ${
                       todo.is_completed
-                        ? 'text-emerald-500 dark:text-emerald-400'
-                        : 'text-slate-300 dark:text-slate-700 hover:text-indigo-500'
+                        ? 'text-yellow-500 dark:text-yellow-400'
+                        : 'text-slate-300 dark:text-slate-700 hover:text-yellow-500 dark:hover:text-yellow-400'
                     }`}
                   >
                     {todo.is_completed ? (
-                      <CheckCircle2 className="h-5 w-5 fill-emerald-500/10" />
+                      <CheckCircle2 className="h-5 w-5 fill-yellow-400/10" />
                     ) : (
                       <Circle className="h-5 w-5" />
                     )}
@@ -348,7 +348,7 @@ export default function TasksTab({ userId }: TasksTabProps) {
                     className={`cursor-pointer text-sm font-medium truncate transition-all flex-1 ${
                       todo.is_completed
                         ? 'line-through text-slate-400 dark:text-slate-600'
-                        : 'text-slate-900 dark:text-slate-100'
+                        : 'text-slate-900 dark:text-white'
                     }`}
                   >
                     {todo.title}
@@ -358,7 +358,7 @@ export default function TasksTab({ userId }: TasksTabProps) {
                 {/* Trash Delete Action */}
                 <button
                   onClick={() => handleDeleteTodo(todo.id)}
-                  className="ml-2 shrink-0 rounded-lg p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/5 transition-all lg:opacity-0 group-hover:opacity-100 cursor-pointer"
+                  className="ml-2 shrink-0 rounded-lg p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all lg:opacity-0 group-hover:opacity-100 cursor-pointer"
                   title="ลบงาน"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -378,11 +378,11 @@ export default function TasksTab({ userId }: TasksTabProps) {
             placeholder="เพิ่มรายการงานใหม่..."
             value={quickInput}
             onChange={e => setQuickInput(e.target.value)}
-            className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder-slate-600 font-medium"
+            className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-yellow-400 placeholder:text-slate-400 dark:placeholder-slate-600 font-medium"
           />
           <button
             type="submit"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 font-bold text-white shadow-md shadow-indigo-600/10 transition-all hover:bg-indigo-500 active:scale-95 cursor-pointer"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 dark:bg-white font-bold text-white dark:text-slate-900 shadow-md transition-all hover:bg-slate-700 dark:hover:bg-slate-200 active:scale-95 cursor-pointer"
           >
             <Plus className="h-5 w-5" />
           </button>
