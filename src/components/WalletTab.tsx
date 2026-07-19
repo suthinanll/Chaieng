@@ -567,13 +567,6 @@ export default function WalletTab({ userId }: WalletTabProps) {
 
       {/* Summary insights box */}
       <div className="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-4 shadow-sm dark:shadow-inner">
-        <Image
-          src="/icon.png"
-          alt="info"
-          width={16}
-          height={16}
-          className="mt-0.5 h-4 w-4 shrink-0"
-        />
         <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
           {totalExpense > 0 ? (
             <span>
